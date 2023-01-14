@@ -10,7 +10,7 @@ import XCTest
 
 @testable import RxStoreKit
 
-class ProductsTests: XCTestCase {
+class SKProductsTests: XCTestCase {
 
     override func setUpWithError() throws {
         SKProductsRequestFactory.current = SKProductsRequestFactory.init()
@@ -72,13 +72,10 @@ class ProductsTests: XCTestCase {
         )
         
         let expectation = expectation(description: "Complete")
-        let disposable = SKProduct.rx.request(with: ["com.temporary.test1"]).subscribe(
-            onNext: { _ in
-            },
-            onCompleted: {
+        let disposable = SKProduct.rx.request(with: ["com.temporary.test1"])
+            .subscribe(onCompleted: {
                 expectation.fulfill()
-            }
-        )
+            })
         stubRequest.onFinished()
         
         waitForExpectations(timeout: 1)
@@ -95,12 +92,9 @@ class ProductsTests: XCTestCase {
         let expectation = expectation(description: "Error")
         
         let disposable = SKProduct.rx.request(with: ["com.temporary.test1"]).subscribe(
-            onNext: { _ in
-            },
             onError: {error in
                 XCTAssertIdentical(error as AnyObject, fakeError)
                 expectation.fulfill()
-            }, onCompleted: {
             }
         )
         stubRequest.onError(error: fakeError)
