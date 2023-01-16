@@ -33,7 +33,6 @@ class RxPaymentTransactionObserver: NSObject, SKPaymentTransactionObserver {
     init(observer: AnyObserver<SKPaymentTransaction>) {
         self.observer = observer
         super.init()
-        print("TransOb init")
     }
     
     func paymentQueue(
@@ -43,9 +42,5 @@ class RxPaymentTransactionObserver: NSObject, SKPaymentTransactionObserver {
         transactions.forEach { transaction in
             self.observer?.onNext(transaction)
         }
-    }
-    
-    deinit {
-        print("TransOb deini")
     }
 }
