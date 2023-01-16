@@ -22,7 +22,7 @@ class SKPaymentQueueTests: XCTestCase {
         mockPaymentQueue.addObserverExpection?.expectedFulfillmentCount = 1
         let paymentQueue: SKPaymentQueue = mockPaymentQueue
         
-        let disposable = paymentQueue.rx.updatedTransaction
+        let disposable = paymentQueue.rx.updatedTransactions
             .subscribe()
         
         waitForExpectations(timeout: 1)
@@ -38,13 +38,12 @@ class SKPaymentQueueTests: XCTestCase {
         mockPaymentQueue.removeObserverExpection?.expectedFulfillmentCount = 1
         let paymentQueue: SKPaymentQueue = mockPaymentQueue
         
-        let disposable = paymentQueue.rx.updatedTransaction
+        let disposable = paymentQueue.rx.updatedTransactions
             .subscribe()
         disposable.dispose()
         waitForExpectations(timeout: 1)
     }
     
-    @available(iOS 14.0, *)
     func testSubscribeUpdatedTransaction_OnNext() {
         let stubPaymentQueue = StubPaymentQueue.init()
         let paymentQueue: SKPaymentQueue = stubPaymentQueue
@@ -53,13 +52,70 @@ class SKPaymentQueueTests: XCTestCase {
         var fakeTransactionsIterator = fakeTransactions.makeIterator()
         let onNextExpectation = expectation(description: "OnNext")
         onNextExpectation.expectedFulfillmentCount = fakeTransactions.count
-        let disposable = paymentQueue.rx.updatedTransaction
+        let disposable = paymentQueue.rx.updatedTransactions
             .subscribe { transaction in
                 XCTAssertIdentical(transaction, fakeTransactionsIterator.next())
                 onNextExpectation.fulfill()
 
             }
         stubPaymentQueue.updateTransaction(updatedTransactions: fakeTransactions)
+        
+        waitForExpectations(timeout: 1)
+        disposable.dispose()
+    }
+    
+    func testSubscribeProductIdentifiersWithRevokedEntitlements_AddObserver() {
+        let mockPaymentQueue = MockPaymentQueue.init()
+        mockPaymentQueue.addObserverExpection = expectation(
+            description: "Add Observer"
+        )
+        mockPaymentQueue.addObserverExpection?.assertForOverFulfill = true
+        mockPaymentQueue.addObserverExpection?.expectedFulfillmentCount = 1
+        let paymentQueue: SKPaymentQueue = mockPaymentQueue
+        
+        let disposable = paymentQueue.rx.productIdentifiersWithRevokedEntitlements
+            .subscribe()
+        
+        waitForExpectations(timeout: 1)
+        disposable.dispose()
+    }
+    
+    func testDisposeProductIdentifiersWithRevokedEntitlements_RemoveObserver() {
+        let mockPaymentQueue = MockPaymentQueue.init()
+        mockPaymentQueue.removeObserverExpection = expectation(
+            description: "Remove Observer"
+        )
+        mockPaymentQueue.removeObserverExpection?.assertForOverFulfill = true
+        mockPaymentQueue.removeObserverExpection?.expectedFulfillmentCount = 1
+        let paymentQueue: SKPaymentQueue = mockPaymentQueue
+        
+        let disposable = paymentQueue.rx.productIdentifiersWithRevokedEntitlements
+            .subscribe()
+        disposable.dispose()
+        waitForExpectations(timeout: 1)
+    }
+    
+    @available(iOS 14.0, *)
+    func testSubscribeProductIdentifiersWithRevokedEntitlements_OnNext() {
+        let stubPaymentQueue = StubPaymentQueue.init()
+        let paymentQueue: SKPaymentQueue = stubPaymentQueue
+        
+        let fakeProductIdentifiers = ["test1", "test2"]
+        var fakeProductIdentifiersIterator = fakeProductIdentifiers.makeIterator()
+        let onNextExpectation = expectation(description: "OnNext")
+        onNextExpectation.expectedFulfillmentCount = fakeProductIdentifiers.count
+        let disposable = paymentQueue.rx.productIdentifiersWithRevokedEntitlements
+            .subscribe { productIdentifier in
+                XCTAssertEqual(
+                    productIdentifier,
+                    fakeProductIdentifiersIterator.next()
+                )
+                onNextExpectation.fulfill()
+            }
+        
+        stubPaymentQueue.revokeEntitlements(
+            productIdentifiers: fakeProductIdentifiers
+        )
         
         waitForExpectations(timeout: 1)
         disposable.dispose()
@@ -75,6 +131,14 @@ class SKPaymentQueueTests: XCTestCase {
         
         func updateTransaction(updatedTransactions: [SKPaymentTransaction]) {
             testObserve?.paymentQueue(self, updatedTransactions: updatedTransactions)
+        }
+        
+        @available(iOS 14.0, *)
+        func revokeEntitlements(productIdentifiers: [String]) {
+            testObserve?.paymentQueue?(
+                self,
+                didRevokeEntitlementsForProductIdentifiers: productIdentifiers
+            )
         }
     }
     
