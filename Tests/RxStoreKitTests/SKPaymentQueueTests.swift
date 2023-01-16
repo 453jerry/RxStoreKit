@@ -12,6 +12,39 @@ import XCTest
 @testable import RxStoreKit
 
 class SKPaymentQueueTests: XCTestCase {
+    
+    func testSubscribeUpdatedTransaction_AddObserver() {
+        let mockPaymentQueue = MockPaymentQueue.init()
+        mockPaymentQueue.addObserverExpection = expectation(
+            description: "Add Observer"
+        )
+        mockPaymentQueue.addObserverExpection?.assertForOverFulfill = true
+        mockPaymentQueue.addObserverExpection?.expectedFulfillmentCount = 1
+        let paymentQueue: SKPaymentQueue = mockPaymentQueue
+        
+        let disposable = paymentQueue.rx.updatedTransaction
+            .subscribe()
+        
+        waitForExpectations(timeout: 1)
+        disposable.dispose()
+    }
+    
+    func testDisposeUpdatedTransaction_RemoveObserver() {
+        let mockPaymentQueue = MockPaymentQueue.init()
+        mockPaymentQueue.removeObserverExpection = expectation(
+            description: "Remove Observer"
+        )
+        mockPaymentQueue.removeObserverExpection?.assertForOverFulfill = true
+        mockPaymentQueue.removeObserverExpection?.expectedFulfillmentCount = 1
+        let paymentQueue: SKPaymentQueue = mockPaymentQueue
+        
+        let disposable = paymentQueue.rx.updatedTransaction
+            .subscribe()
+        disposable.dispose()
+        waitForExpectations(timeout: 1)
+    }
+    
+    @available(iOS 14.0, *)
     func testSubscribeUpdatedTransaction_OnNext() {
         let stubPaymentQueue = StubPaymentQueue.init()
         let paymentQueue: SKPaymentQueue = stubPaymentQueue
@@ -32,23 +65,31 @@ class SKPaymentQueueTests: XCTestCase {
         disposable.dispose()
     }
     
-    func testSubscribeUpdatedTransaction_RemoveObserverAfterDispose() {
-        let stubPaymentQueue = StubPaymentQueue.init()
-        let paymentQueue: SKPaymentQueue = stubPaymentQueue
+    private class StubPaymentQueue: SKPaymentQueue {
         
-        let disposable = paymentQueue.rx.updatedTransaction
-            .subscribe()
-        XCTAssertEqual(paymentQueue.transactionObservers.count, 1)
-        disposable.dispose()
-        XCTAssertEqual(paymentQueue.transactionObservers.count, 0)
+        weak var testObserve: SKPaymentTransactionObserver?
         
+        override func add(_ observer: SKPaymentTransactionObserver) {
+            self.testObserve = observer
+        }
+        
+        func updateTransaction(updatedTransactions: [SKPaymentTransaction]) {
+            testObserve?.paymentQueue(self, updatedTransactions: updatedTransactions)
+        }
     }
     
-    private class StubPaymentQueue: SKPaymentQueue {
-        func updateTransaction(updatedTransactions: [SKPaymentTransaction]) {
-            self.transactionObservers.forEach { observer in
-                observer.paymentQueue(self, updatedTransactions: updatedTransactions)
-            }
+    private class MockPaymentQueue: SKPaymentQueue {
+        
+        var addObserverExpection: XCTestExpectation?
+        
+        override func add(_ observer: SKPaymentTransactionObserver) {
+            addObserverExpection?.fulfill()
+        }
+        
+        var removeObserverExpection: XCTestExpectation?
+        
+        override func remove(_ observer: SKPaymentTransactionObserver) {
+            removeObserverExpection?.fulfill()
         }
     }
 }
