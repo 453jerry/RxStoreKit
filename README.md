@@ -27,3 +27,12 @@ SKProduct.rx.request(with: ["xxxxx"])
     })
     .dispose()
 ```
+
+### Subscribe product identifiers with revoked entitlements
+
+```swift
+paymentQueue.rx.productIdentifiersWithRevokedEntitlements
+    .subscribe { productIdentifier in
+        // Do what you want
+    }
+```
