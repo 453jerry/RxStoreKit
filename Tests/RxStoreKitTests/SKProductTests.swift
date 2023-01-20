@@ -22,9 +22,7 @@ class SKProductsTests: XCTestCase {
     func testDisposeRequest_CancelRequest() {
         let mockRequest = MockProductsRequest.init()
         mockRequest.cancelExpection = expectation(description: "Invoke cancel")
-        SKProductsRequestFactory.current = StubProductsRequestFactor.init(
-            request: mockRequest
-        )
+        SKProductsRequestFactory.current = SKProductsRequestFactory.init { _ in mockRequest }
 
         SKProduct.rx.request(with: ["com.temporary.test1"]).subscribe().dispose()
 
@@ -34,20 +32,32 @@ class SKProductsTests: XCTestCase {
     func testSubscribeRequest_StartRequest() {
         let mockRequest = MockProductsRequest.init()
         mockRequest.startExpection = expectation(description: "Invoke start")
-        SKProductsRequestFactory.current = StubProductsRequestFactor.init(
-            request: mockRequest
-        )
-
+        SKProductsRequestFactory.current = SKProductsRequestFactory.init { _ in mockRequest }
+        
         SKProduct.rx.request(with: ["com.temporary.test1"]).subscribe().dispose()
 
+        waitForExpectations(timeout: 1)
+    }
+    
+    func testSubscribeRequest_CreateRquest() {
+        let testProductIdentifiers: Set<String> = ["com.temporary.test1"]
+        let expectation = expectation(description: "Craete requet")
+        let mockFactory = SKProductsRequestFactory.init { productIdentifiers in
+            XCTAssertEqual(testProductIdentifiers, productIdentifiers)
+            expectation.fulfill()
+            return StubProductsRequest(productIdentifiers: productIdentifiers)
+        }
+        SKProductsRequestFactory.current = mockFactory
+        
+        SKProduct.rx.request(with: testProductIdentifiers).subscribe().dispose()
         waitForExpectations(timeout: 1)
     }
     
     // swiftlint: disable trailing_closure
     func testSubscribeRequest_OnNextWithResponse() {
         let stubRequest = StubProductsRequest.init()
-        SKProductsRequestFactory.current = StubProductsRequestFactor.init(
-            request: stubRequest
+        SKProductsRequestFactory.current = SKProductsRequestFactory.init(
+            creator: { _ in stubRequest }
         )
         let fakeResponse = SKProductsResponse.init()
         
@@ -67,8 +77,8 @@ class SKProductsTests: XCTestCase {
     
     func testSubscribeRequest_OnComplete() {
         let stubRequest = StubProductsRequest.init()
-        SKProductsRequestFactory.current = StubProductsRequestFactor.init(
-            request: stubRequest
+        SKProductsRequestFactory.current = SKProductsRequestFactory.init(
+            creator: { _ in stubRequest }
         )
         
         let expectation = expectation(description: "Complete")
@@ -84,8 +94,8 @@ class SKProductsTests: XCTestCase {
     
     func testSubscribeRequest_OnError() {
         let stubRequest = StubProductsRequest.init()
-        SKProductsRequestFactory.current = StubProductsRequestFactor.init(
-            request: stubRequest
+        SKProductsRequestFactory.current = SKProductsRequestFactory.init(
+            creator: { _ in stubRequest }
         )
         let fakeError = NSError.init(domain: "test", code: 0)
         
@@ -105,8 +115,8 @@ class SKProductsTests: XCTestCase {
     
     func testSubscribeReqeust_Share() {
         let mockRequest = MockProductsRequest.init()
-        SKProductsRequestFactory.current = StubProductsRequestFactor.init(
-            request: mockRequest
+        SKProductsRequestFactory.current = SKProductsRequestFactory.init(
+            creator: { _ in mockRequest }
         )
         mockRequest.startExpection = expectation(description: "Invoke start onece")
         mockRequest.startExpection?.expectedFulfillmentCount = 1
@@ -121,32 +131,16 @@ class SKProductsTests: XCTestCase {
         disposable2.dispose()
     }
     
-    private class StubProductsRequestFactor: SKProductsRequestFactory {
-        
-        let request: SKProductsRequestProtocol
-        
-        init(request: SKProductsRequestProtocol) {
-            self.request = request
-        }
-        
-        override func create(with: Set<String>) ->
-        SKProductsRequestProtocol {
-            self.request
-        }
-    }
-    
-    private class MockProductsRequest: SKProductsRequestProtocol {
+    private class MockProductsRequest: SKProductsRequest {
         
         var startExpection: XCTestExpectation?
         var cancelExpection: XCTestExpectation?
         
-        weak var delegate: SKProductsRequestDelegate?
-        
-        func start() {
+        override func start() {
             startExpection?.fulfill()
         }
         
-        func cancel() {
+        override func cancel() {
             cancelExpection?.fulfill()
         }
     }

@@ -9,17 +9,18 @@ import RxSwift
 import StoreKit
 
 // swiftlint: disable file_types_order
+@available(watchOS 6.2, *)
 extension Reactive where Base: SKProduct {
     /**
     Observable sequence of responses for SKProductRequest
-    
+     
     - parameter request: Proeuct Identifiers
     - returns: Observable sequence of SKProductsResponse.
     */
     public static func request(with productIdentifiers: Set<String>) ->
     Observable<SKProductsResponse> {
         Observable<SKProductsResponse>.create { observer in
-            var request = SKProductsRequestFactory.current.create(
+            let request = SKProductsRequestFactory.current.create(
                 with: productIdentifiers
             )
             let requestDelegate: SKProductsRequestDelegatePorxy? =
@@ -38,14 +39,26 @@ extension Reactive where Base: SKProduct {
     }
 }
 
+@available(watchOS 6.2, *)
 class SKProductsRequestFactory {
     static var current = SKProductsRequestFactory.init()
+    
+    let creator: (_: Set<String>) -> SKProductsRequest
 
-    func create(with productIdentifiers: Set<String>) -> SKProductsRequestProtocol {
-        SKProductsRequest.init(productIdentifiers: productIdentifiers)
+    init(
+        creator: @escaping (_: Set<String>) -> SKProductsRequest = { identifiers in
+            SKProductsRequest.init(productIdentifiers: identifiers)
+        }
+    ) {
+        self.creator = creator
+    }
+    
+    func create(with productIdentifiers: Set<String>) -> SKProductsRequest {
+        self.creator(productIdentifiers)
     }
 }
 
+@available(watchOS 6.2, *)
 class SKProductsRequestDelegatePorxy: NSObject, SKProductsRequestDelegate {
     let observer: AnyObserver<SKProductsResponse>
     
