@@ -64,6 +64,7 @@ class SKPaymentQueueTests: XCTestCase {
         disposable.dispose()
     }
     
+    @available(macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0, *)
     func testSubscribeProductIdentifiersWithRevokedEntitlements_AddObserver() {
         let mockPaymentQueue = MockPaymentQueue.init()
         mockPaymentQueue.addObserverExpection = expectation(
@@ -80,6 +81,7 @@ class SKPaymentQueueTests: XCTestCase {
         disposable.dispose()
     }
     
+    @available(macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0, *)
     func testDisposeProductIdentifiersWithRevokedEntitlements_RemoveObserver() {
         let mockPaymentQueue = MockPaymentQueue.init()
         mockPaymentQueue.removeObserverExpection = expectation(
@@ -94,8 +96,8 @@ class SKPaymentQueueTests: XCTestCase {
         disposable.dispose()
         waitForExpectations(timeout: 1)
     }
-    
-    @available(iOS 14.0, *)
+        
+    @available(macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0, *)
     func testSubscribeProductIdentifiersWithRevokedEntitlements_OnNext() {
         let stubPaymentQueue = StubPaymentQueue.init()
         let paymentQueue: SKPaymentQueue = stubPaymentQueue
@@ -133,7 +135,7 @@ class SKPaymentQueueTests: XCTestCase {
             testObserve?.paymentQueue(self, updatedTransactions: updatedTransactions)
         }
         
-        @available(iOS 14.0, *)
+        @available(macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0, *)
         func revokeEntitlements(productIdentifiers: [String]) {
             testObserve?.paymentQueue?(
                 self,
