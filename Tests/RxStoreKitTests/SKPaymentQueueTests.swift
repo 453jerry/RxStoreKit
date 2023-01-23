@@ -53,10 +53,14 @@ class SKPaymentQueueTests: XCTestCase {
         let onNextExpectation = expectation(description: "OnNext")
         onNextExpectation.expectedFulfillmentCount = fakeTransactions.count
         let disposable = paymentQueue.rx.updatedTransactions
-            .subscribe { transaction in
-                XCTAssertIdentical(transaction, fakeTransactionsIterator.next())
-                onNextExpectation.fulfill()
-
+            .subscribe { event in
+                switch event {
+                case .next(let transaction):
+                    XCTAssertIdentical(transaction, fakeTransactionsIterator.next())
+                    onNextExpectation.fulfill()
+                default: 
+                    return
+                }
             }
         stubPaymentQueue.updateTransaction(updatedTransactions: fakeTransactions)
         
@@ -107,12 +111,17 @@ class SKPaymentQueueTests: XCTestCase {
         let onNextExpectation = expectation(description: "OnNext")
         onNextExpectation.expectedFulfillmentCount = fakeProductIdentifiers.count
         let disposable = paymentQueue.rx.productIdentifiersWithRevokedEntitlements
-            .subscribe { productIdentifier in
-                XCTAssertEqual(
-                    productIdentifier,
-                    fakeProductIdentifiersIterator.next()
-                )
-                onNextExpectation.fulfill()
+            .subscribe { event in
+                switch event {
+                case .next(let productIdentifier):
+                    XCTAssertEqual(
+                        productIdentifier,
+                        fakeProductIdentifiersIterator.next()
+                    )
+                    onNextExpectation.fulfill()
+                default: 
+                    return
+                }
             }
         
         stubPaymentQueue.revokeEntitlements(
