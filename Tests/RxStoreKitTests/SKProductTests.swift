@@ -10,6 +10,7 @@ import XCTest
 
 @testable import RxStoreKit
 
+@available(watchOS 6.2, *)
 class SKProductsTests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -131,22 +132,23 @@ class SKProductsTests: XCTestCase {
         disposable2.dispose()
     }
     
+    @available(watchOS 6.2, *)
     private class MockProductsRequest: SKProductsRequest {
-        
         var startExpection: XCTestExpectation?
-        var cancelExpection: XCTestExpectation?
         
         override func start() {
             startExpection?.fulfill()
         }
+        
+        var cancelExpection: XCTestExpectation?
         
         override func cancel() {
             cancelExpection?.fulfill()
         }
     }
     
+    @available(watchOS 6.2, *)
     private class StubProductsRequest: SKProductsRequest {
-        
         override func start() {}
         
         override func cancel() {}

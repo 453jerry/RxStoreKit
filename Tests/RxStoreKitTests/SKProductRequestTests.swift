@@ -10,6 +10,7 @@ import XCTest
 
 @testable import RxStoreKit
 
+@available(watchOS 6.2, *)
 class SKProductRequestTests: XCTestCase {
     
     func testDisposeRequest_CancelRequest() {
@@ -154,6 +155,7 @@ class SKProductRequestTests: XCTestCase {
         }
     }
 
+    @available(watchOS 6.2, *)
     private class MockProductsRequest: SKProductsRequest {
         override init(productIdentifiers: Set<String>) {
             super.init()
@@ -171,7 +173,8 @@ class SKProductRequestTests: XCTestCase {
             cancelExpection?.fulfill()
         }
     }
-        
+       
+    @available(watchOS 6.2, *)
     private class StubProductsRequest: SKProductsRequest {
         override init(productIdentifiers: Set<String>) {
             super.init()

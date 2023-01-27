@@ -11,6 +11,7 @@ import XCTest
 
 @testable import RxStoreKit
 
+@available(watchOS 6.2, *)
 class SKPaymentQueueTests: XCTestCase {
     
     func testSubscribeUpdatedTransaction_AddObserver() {
@@ -132,6 +133,7 @@ class SKPaymentQueueTests: XCTestCase {
         disposable.dispose()
     }
     
+    @available(watchOS 6.2, *)
     private class StubPaymentQueue: SKPaymentQueue {
         
         weak var testObserve: SKPaymentTransactionObserver?
@@ -153,6 +155,7 @@ class SKPaymentQueueTests: XCTestCase {
         }
     }
     
+    @available(watchOS 6.2, *)
     private class MockPaymentQueue: SKPaymentQueue {
         
         var addObserverExpection: XCTestExpectation?
