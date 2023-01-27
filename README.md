@@ -18,6 +18,22 @@ SKProduct.rx.request(with: ["xxxxx"])
     .dispose()
 ```
 
+or
+
+```swift
+let request = SKProductsRequest.init(productIdentifiers: ["product_id"])
+request.rx.response.subscribe { event in
+    switch event {
+    case .next(let response): 
+        let products = response.products
+    default:
+        return
+    }
+}
+.dispose()
+```
+
+
 ### Subscribe update payment transactons
 
 ```swift
